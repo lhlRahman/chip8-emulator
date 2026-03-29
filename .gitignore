@@ -1,0 +1,8 @@
+# Binaries
+a.out
+main
+*.o
+
+# IDE / tooling
+.vscode/
+.claude/
