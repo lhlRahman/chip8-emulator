@@ -154,11 +154,60 @@ void Chip8::Decode(const std::uint16_t instruction){
 					registers[rx] -= registers[ry];
 					break;
 				}
+				case 6: {
+					if (registers[rx] & 0x01){
+						registers[0xF] = 1;
+					} else {
+						registers[0xF] = 0;
+					}
+
+					registers[rx] >>= 1;
+					break;
+				}
+				case 7: {
+					if (registers[ry] >= registers[rx]) {
+						registers[0xF] = 1;
+					} else {
+						registers[0xF] = 0;
+					}
+					registers[rx] =  registers[ry] - registers[rx];
+					break;
+				}
+				case 0xE: {
+					if (registers[rx] & 0x80){
+						registers[0xF] = 1;
+					} else {
+						registers[0xF] = 0;
+					}
+
+					registers[rx] <<= 1;
+					break;
+				}
 			}
-
-
+			break;
 		}
+		case 0x9: {
+			std::uint16_t vr = (instruction & 0xF00) >> 8;
+			std::uint16_t vy = (instruction & 0x0F0) >> 4;
 
+			if (registers[vr] != registers[vy]){
+				PC += 2;
+			}
+			break;
+		}
+		case 0xA: {
+			IR = (instruction & 0x0FFF);
+			break;
+		}
+		case 0xB: {
+			PC =  (instruction & 0x0FFF) + registers[0];
+			break;
+		}
+		case 0xC: {
+			std::uint16_t vr = (instruction & 0xF00) >> 8;
+			registers[vr] = (instruction & 0x00FF) & randByte(randGen);
+			break;
+		}
 		}
 		
 	}
