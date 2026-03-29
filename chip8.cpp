@@ -328,3 +328,23 @@ void Chip8::Decode(const std::uint16_t instruction){
 	}
 
 
+void Chip8::Cycle()
+{
+	// Fetch
+	opcode = (main_memory[PC] << 8) | main_memory[PC + 1];
+
+	// Increment the PC before we execute anything
+	PC += 2;
+
+	Decode(opcode);
+
+	if (Timer > 0)
+	{
+		--Timer;
+	}
+
+	if (Sound_Timer > 0)
+	{
+		--Sound_Timer;
+	}
+}

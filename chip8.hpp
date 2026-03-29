@@ -29,6 +29,7 @@ class Chip8 {
 
         void LoadROM(const std::string filename);
         void Decode(const std::uint16_t instruction);
+        void Cycle();
 
 
     private:
