@@ -208,8 +208,33 @@ void Chip8::Decode(const std::uint16_t instruction){
 			registers[vr] = (instruction & 0x00FF) & randByte(randGen);
 			break;
 		}
+		case 0xD: {
+			Byte rx = registers[(instruction & 0xF00) >> 8];
+			Byte ry = registers[(instruction & 0x0F0) >> 4];
+			Byte s  = (instruction & 0x00F);
+
+			rx %= 64;
+			ry %= 32;
+
+			registers[0xF] = 0;
+
+			for (Byte i = 0; i < s; i++) {
+				if (ry + i >= 32) break;
+
+				Byte spriteByte = main_memory[IR + i];
+
+				std::uint64_t row = static_cast<std::uint64_t>(spriteByte) << 56;
+				std::uint64_t spriteRow = (row >> rx) | (row << (64 - rx));
+
+				if (display[ry + i] & spriteRow) {
+					registers[0xF] = 1;
+				}
+
+				display[ry + i] ^= spriteRow;
+			}
+			break;
 		}
-		
+		}
 	}
 
 

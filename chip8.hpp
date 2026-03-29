@@ -24,7 +24,7 @@ class Chip8 {
         Byte Sound_Timer = 0;
 
         std::array<Byte, 16> key = {0};
-        std::array<std::uint32_t, 64> display = {0};
+        std::array<std::uint64_t, 32> display = {0};
         std::uint16_t opcode;
 
         void LoadROM(const std::string filename);
