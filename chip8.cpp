@@ -32,7 +32,7 @@ const std::array<Byte, FONTSET_SIZE> fontset
 Chip8::Chip8(): randGen(std::random_device{}()), randByte(0, 255U){
     PC = START_ADDRESS;
     // we need to load fonts
-    for (unsigned int i: std::views::iota(0, FONTSET_SIZE)){
+    for (unsigned int i: std::views::iota(static_cast<unsigned int>(0), FONTSET_SIZE)){
         main_memory[FONTSET_START_ADDRESS + i] = fontset[i];
     }
 }
@@ -56,6 +56,16 @@ void Chip8::Decode(const std::uint16_t instruction){
 	Byte nibble = static_cast<Byte>(instruction >> 12);
 
 	switch (nibble) {
+		case 0x0: {
+			std::uint16_t sub = instruction & 0x00FF;
+			if (sub == 0xE0) {
+				display.fill(0);
+			} else if (sub == 0xEE) {
+				SP--;
+				PC = level_stack[SP];
+			}
+			break;
+		}
 		case 0x1: {
 			PC = instruction & 0xFFF;
 			break;
@@ -231,6 +241,86 @@ void Chip8::Decode(const std::uint16_t instruction){
 				}
 
 				display[ry + i] ^= spriteRow;
+			}
+			break;
+		}
+		case 0xE: {
+			std::uint16_t vr = (instruction & 0xF00) >> 8;
+			std::uint16_t sub = instruction & 0x00FF;
+
+			switch (sub) {
+				case 0x9E: {
+					if (key[registers[vr]]) PC += 2;
+					break;
+				}
+				case 0xA1: {
+					if (!key[registers[vr]]) PC += 2;
+					break;
+				}
+			}
+			break;
+		}
+
+		case 0xF: {
+			std::uint16_t vr = (instruction & 0xF00) >> 8;
+			std::uint16_t sub = instruction & 0x00FF;
+
+			switch (sub) {
+				case 0x07: {
+					registers[vr] = Timer;
+					break;
+				}
+				case 0x0A: {
+					bool keyPressed = false;
+					for (Byte i = 0; i < 16; i++) {
+						if (key[i]) {
+							registers[vr] = i;
+							keyPressed = true;
+							break;
+						}
+					}
+					if (!keyPressed) PC -= 2;
+					break;
+				}
+				case 0x15: {
+					Timer = registers[vr];
+					break;
+				}
+				case 0x18: {
+					Sound_Timer = registers[vr];
+					break;
+				}
+				case 0x1E: {
+					IR += registers[vr];
+					break;
+				}
+				case 0x29: {
+					IR = FONTSET_START_ADDRESS + (registers[vr] * 5);
+					break;
+				}
+				case 0x33: {
+					Byte val = registers[vr];
+					main_memory[IR + 2] = val % 10;
+					val /= 10;
+					main_memory[IR + 1] = val % 10;
+					val /= 10;
+					main_memory[IR] = val % 10;
+					break;
+				}
+				case 0x55: {
+					for (std::uint16_t i = 0; i <= vr; i++) {
+						main_memory[IR + i] = registers[i];
+					}
+					IR += vr + 1;
+					break;
+				}
+				case 0x65: {
+					for (std::uint16_t i = 0; i <= vr; i++) {
+						registers[i] = main_memory[IR + i];
+					}
+					IR += vr + 1;
+					break;
+				}
 			}
 			break;
 		}
